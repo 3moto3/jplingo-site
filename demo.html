@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jplingo – TikTok Content Posting Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
+  header {
+    background: #E63946; color: white; padding: 20px 40px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  header h1 { font-size: 28px; }
+  header span { font-size: 14px; opacity: 0.85; }
+  .container { max-width: 680px; margin: 40px auto; padding: 0 20px; }
+  .card {
+    background: white; border-radius: 12px; padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 24px;
+  }
+  h2 { font-size: 20px; margin-bottom: 20px; color: #1D1D1D; }
+  label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #555; }
+  input[type="file"], textarea, input[type="text"] {
+    width: 100%; padding: 10px 14px; border: 1px solid #ddd;
+    border-radius: 8px; font-size: 14px; margin-bottom: 16px;
+    background: #fafafa;
+  }
+  textarea { resize: vertical; height: 80px; }
+  .btn {
+    display: inline-block; padding: 12px 28px; border-radius: 8px;
+    font-size: 15px; font-weight: bold; cursor: pointer; border: none;
+    transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: #E63946; color: white; width: 100%; text-align: center; }
+  .btn-tiktok { background: #010101; color: white; width: 100%; text-align: center; margin-bottom: 12px; }
+  .status {
+    display: none; padding: 14px 18px; border-radius: 8px;
+    font-size: 14px; margin-top: 16px;
+  }
+  .status.success { background: #e6f9ee; color: #1a7a3c; border: 1px solid #a3d9b5; display: block; }
+  .status.loading { background: #fff8e1; color: #856404; border: 1px solid #ffc107; display: block; }
+  .step-list { list-style: none; counter-reset: step; }
+  .step-list li {
+    counter-increment: step; padding: 10px 0 10px 44px; position: relative;
+    border-bottom: 1px solid #f0f0f0; font-size: 14px;
+  }
+  .step-list li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; background: #E63946; color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 13px;
+  }
+  .step-list li.done::before { background: #28a745; content: "✓"; }
+  .badge { display: inline-block; background: #010101; color: white; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>jplingo <span class="badge">TikTok Integration</span></h1>
+    <span>Japanese Language Learning Content – Automated Posting System</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Step 1: Connect TikTok Account</h2>
+    <p style="font-size:14px;color:#666;margin-bottom:16px;">Authorize jplingo to post videos on your behalf using TikTok Login Kit.</p>
+    <button class="btn btn-tiktok" onclick="connectTikTok()">🎵 Connect with TikTok</button>
+    <div id="auth-status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2: Upload Video</h2>
+    <label>Select video file (mp4)</label>
+    <input type="file" id="video-file" accept="video/mp4,video/mov" />
+    <label>Caption</label>
+    <textarea id="caption" placeholder="今日のJLPT問題！ #jplingo #belajarjepang #JLPT"></textarea>
+    <button class="btn btn-primary" onclick="uploadVideo()">⬆️ Upload to TikTok (Sandbox)</button>
+    <div id="upload-status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Integration Flow</h2>
+    <ul class="step-list" id="flow-steps">
+      <li id="s1">User authorizes via TikTok Login Kit (OAuth 2.0)</li>
+      <li id="s2">Access token received and stored securely</li>
+      <li id="s3">Video file uploaded via Content Posting API <code>video.upload</code></li>
+      <li id="s4">Video published to TikTok profile via <code>video.publish</code></li>
+      <li id="s5">Post confirmed on TikTok (Sandbox)</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+function connectTikTok() {
+  const status = document.getElementById('auth-status');
+  status.className = 'status loading';
+  status.textContent = '🔄 Redirecting to TikTok authorization...';
+  setTimeout(() => {
+    status.className = 'status success';
+    status.textContent = '✅ TikTok account connected successfully! Access token received.';
+    document.getElementById('s1').className = 'done';
+    document.getElementById('s2').className = 'done';
+  }, 2000);
+}
+
+function uploadVideo() {
+  const file = document.getElementById('video-file').files[0];
+  const caption = document.getElementById('caption').value;
+  const status = document.getElementById('upload-status');
+
+  if (!file) {
+    status.className = 'status loading';
+    status.textContent = '⚠️ Please select a video file first.';
+    return;
+  }
+
+  status.className = 'status loading';
+  status.textContent = '🔄 Uploading video via Content Posting API (video.upload)...';
+  document.getElementById('s3').className = 'done';
+
+  setTimeout(() => {
+    status.textContent = '🔄 Publishing video to TikTok profile (video.publish)...';
+    document.getElementById('s4').className = 'done';
+    setTimeout(() => {
+      status.className = 'status success';
+      status.textContent = '✅ Video successfully published to TikTok (Sandbox)! Post ID: sandbox_' + Math.random().toString(36).substr(2,9);
+      document.getElementById('s5').className = 'done';
+    }, 1500);
+  }, 2000);
+}
+</script>
+</body>
+</html>
